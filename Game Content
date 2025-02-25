@@ -7,13 +7,42 @@ html_code = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tank Tactics</title>
     <style>
+        /* 启动界面样式 */
         body {
             margin: 0;
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
+        .start-screen {
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .start-screen h1 {
+            font-size: 36px;
+            color: #333;
+        }
+        .start-screen button {
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+        }
+        .start-screen button:hover {
+            background-color: #0056b3;
+        }
+
+        /* 游戏界面样式 */
         canvas {
             display: block;
             margin: 0 auto;
@@ -55,29 +84,60 @@ html_code = """
     </style>
 </head>
 <body>
-    <!-- 顶部状态栏 -->
-    <div class="ui-container">
-        <div class="status">
-            Score: <span id="score">0</span> | 
-            Health: <span id="health">10</span> | 
-            Wave: <span id="wave">1/10</span> | 
-            Enemies: <span id="enemies">5</span>
-        </div>
-        <div class="controls">
-            <button id="pauseResumeBtn">Pause</button>
-            <button id="restartBtn">Restart</button>
-        </div>
+    <!-- 启动界面 -->
+    <div class="start-screen" id="startScreen">
+        <h1>Tank Tactics</h1>
+        <button id="startButton">Start</button>
     </div>
 
-    <!-- 游戏画布 -->
-    <canvas id="gameCanvas" width="1500" height="1000"></canvas>
+    <!-- 游戏界面 -->
+    <div id="gameScreen" style="display: none;">
+        <!-- 顶部状态栏 -->
+        <div class="ui-container">
+            <div class="status-bar">
+                <div>Score: <span id="score">0</span></div>
+                <div>Health: <span id="health">10</span></div>
+                <div>Wave: <span id="wave">1/10</span></div>
+                <div>Enemies: <span id="enemies">5</span></div>
+            </div>
+            <div class="controls">
+                <button id="pauseResumeBtn">Pause</button>
+                <button id="restartBtn">Restart</button>
+            </div>
+        </div>
 
-    <!-- 底部日志 -->
-    <div class="log" id="log"></div>
+        <!-- 游戏画布 -->
+        <canvas id="gameCanvas" width="1500" height="1000"></canvas>
+
+        <!-- 底部日志 -->
+        <div class="log" id="log"></div>
+    </div>
+
+    <!-- 游戏结束界面 -->
+    <div id="gameOverScreen" style="display: none; text-align: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);">
+        <h1 id="gameOverMessage"></h1>
+        <p>Score: <span id="finalScore">0</span></p>
+        <p>Tanks Destroyed: <span id="tanksDestroyed">0</span></p>
+        <p>Light Tanks: <span id="lightTanksDestroyed">0</span>, Medium Tanks: <span id="mediumTanksDestroyed">0</span>, Heavy Tanks: <span id="heavyTanksDestroyed">0</span></p>
+        <button id="restartButton">Restart</button>
+    </div>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        // 启动界面逻辑
+        const startScreen = document.getElementById('startScreen');
+        const gameScreen = document.getElementById('gameScreen');
+        const startButton = document.getElementById('startButton');
+
+        startButton.addEventListener('click', () => {
+            startScreen.style.display = 'none';
+            gameScreen.style.display = 'block';
+            startGame();
+        });
+
+        // 游戏逻辑
+        function startGame() {
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
 
         // 游戏变量
         let player = { 
@@ -686,9 +746,47 @@ html_code = """
                 spawnEnemies(); // 刷新新一波敌人
             }
         }, 10000); // 每10秒刷新一波敌人
-        let gameLoop = setInterval(() => {
-            updateGame();
+        function updateStatusBar() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('health').textContent = player.health;
+            document.getElementById('wave').textContent = `${waveCount}/${maxWaves}`;
+            document.getElementById('enemies').textContent = enemies.length;
+        }
+        setInterval(() => {
+            updateStatusBar();
         }, 16);
+        let gameLoop = setInterval(updateGame, 16);
+
+            // 绘制玩家
+            function drawPlayer() {
+                ctx.fillStyle = player.color;
+                ctx.fillRect(player.x, player.y, player.width, player.height);
+            }
+
+            // 绘制子弹
+            function drawBullets() {
+                bullets.forEach(bullet => {
+                    ctx.fillStyle = 'yellow';
+                    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+                });
+            }
+
+            // 绘制敌方子弹
+            function drawEnemyBullets() {
+                enemyBullets.forEach(bullet => {
+                    ctx.fillStyle = 'red';
+                    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+                });
+            }
+
+            // 绘制敌人
+            function drawEnemies() {
+                enemies.forEach(enemy => {
+                    ctx.fillStyle = enemy.color;
+                    ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+                });
+            }
+        }
     </script>
 </body>
 </html>
